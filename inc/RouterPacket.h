@@ -1,6 +1,8 @@
 #ifndef ROUTERPACKET_H_
 #define ROUTERPACKET_H_
 
+#define DEBUG
+
 typedef struct
 {
 

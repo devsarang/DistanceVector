@@ -9,6 +9,7 @@
 #include <string>
 #include <fstream>
 #include <utility>
+#include <iomanip>
 #include <limits>
 #include <algorithm>
 #include <unistd.h>
@@ -158,15 +159,16 @@ int ServerRouter::distanceVectorInit()
 
 void ServerRouter::displayRoutingTable()
 {
+	std::cout<<std::setw(10)<<"FROM ID"<<std::setw(20)<<"FROM IP"<<std::setw(10)<<"TO ID"<<std::setw(20)<<"TO IP"<<std::setw(10)<<"NEXT ID"<<std::setw(20)<<"NEXT IP"<<std::setw(10)<<"COST"<<std::endl;
 	for(unsigned int i=0;i<numServers;i++)
 	{
 		if(serverTable[i+1].cost == std::numeric_limits<unsigned short>::max())
 		{
-			std::cout<<serverId<<"  "<<serverTable[i+1].servIp<<" "<<serverTable[i+1].nextId<<" "<<serverTable[i+1].nextIp<<" "<<"infinity"<<std::endl;
+			std::cout<<std::setw(10)<<serverId<<std::setw(20)<<serverIp<<std::setw(10)<<i+1<<std::setw(20)<<serverTable[i+1].nextIp<<std::setw(10)<<serverTable[i+1].nextId<<std::setw(20)<<serverTable[i+1].nextIp<<std::setw(10)<<"infinity"<<std::endl;
 		}
 		else
 		{
-			std::cout<<serverId<<"  "<<serverTable[i+1].servIp<<" "<<serverTable[i+1].nextId<<" "<<serverTable[i+1].nextIp<<" "<<serverTable[i+1].cost<<std::endl;
+			std::cout<<std::setw(10)<<serverId<<std::setw(20)<<serverIp<<std::setw(10)<<i+1<<std::setw(20)<<serverTable[i+1].nextIp<<std::setw(10)<<serverTable[i+1].nextId<<std::setw(20)<<serverTable[i+1].nextIp<<std::setw(10)<<serverTable[i+1].cost<<std::endl;
 		}
 	}
 }
@@ -224,23 +226,82 @@ int ServerRouter::recvProcessUpdatePacket()
 		std::cout<<"Wrong length of packet"<<std::endl;
 		return 1;
 	}
-	std::cout<<recvAddr.sin_addr.s_addr<<std::endl;
-	for(int i = 0;i<numServers;i++)
+
+	std::string fromIp;
+	int fromId = 0;
+	int ip = updatePacket->serverIP;
+	char * temp;
+	temp = inet_ntoa(recvAddr.sin_addr);
+	fromIp = temp;
+	for(int i=0;i<numServers;i++)
+	{
+		if(fromIp == serverTable[i+1].servIp)
+			{
+				fromId = i+1;
+				break;
+			}
+	}
+	for(int i=0;i<numServers;i++)
+	{
+		distanceVector[updatePacket->List[i].serverId][fromId] = serverTable[fromId].cost + updatePacket->List[i].linkCost;
+	}
+	updateRoutingTable();
+#ifdef DEBUG
+	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
+	for(int i=0;i<numServers;i++)
+	{
+		for(int j=0;j<numServers;j++)
 		{
-			std::cout<<updatePacket->List[i].linkCost<<std::endl;
-			std::cout<<updatePacket->List[i].serverId<<std::endl;
-			std::cout<<updatePacket->List[i].serverIp<<std::endl;
-			std::cout<<updatePacket->List[i].serverPort<<std::endl;
+			std::cout<<distanceVector[i][j]<<"  ";
 		}
+		std::cout<<std::endl;
+	}
+#endif
 	return 0;
+
 }
 
-int ServerRouter::updateRoutingTable(short int serverId1,short int serverId2,short int newCost)
+int ServerRouter::updateRoutingTable()
 {
-
+	for(int i=0;i<numServers;i++)
+	{
+		serverTable[i+1].cost = minOfRowInDV(i);
+	}
 	return 0;
 }
 
+unsigned short ServerRouter::minOfRowInDV(int row)
+{
+	unsigned short minVal = distanceVector[row][0];
+	for(int i=0;i<numServers;i++)
+	{
+		if(minVal>distanceVector[row][i])
+			minVal = distanceVector[row][i];
+	}
+	return minVal;
+}
+
+int ServerRouter::updateCost(unsigned short server1, unsigned short server2, unsigned short cost)
+{
+	if(serverId != server1 && serverId != server2)
+		return 1;
+	bool isNeighbor = false;
+	unsigned short otherId = 0;
+	if(serverId == server1)
+		otherId = server2;
+	else
+		otherId = server1;
+	for(std::vector<std::pair<std::string,unsigned short> >::iterator it = neighborList.begin();it!=neighborList.end();++it)
+	{
+		if(serverTable[otherId] == it->first)
+			isNeighbor = true;
+	}
+	if(!isNeighbor)
+		return 1;
+	distanceVector[otherId][otherId] = cost;
+	updateRoutingTable();
+	return 0;
+}
 int ServerRouter::serverRun()
 {
 	std::string command;
@@ -274,7 +335,7 @@ int ServerRouter::serverRun()
 		{
 			if (FD_ISSET(fileno(stdin), &activeFdSet))
 			{
-				short int newCost = 0, serverId1 = 0, serverId2 = 0;
+				unsigned short newCost = 0, serverId1 = 0, serverId2 = 0;
 				std::cin >> command;
 				switch (commandInterpretor(command))
 				{
@@ -289,7 +350,10 @@ int ServerRouter::serverRun()
 
 				case UPDATE:
 					std::cin >> serverId1 >> serverId2 >> newCost;
-					updateRoutingTable(serverId1, serverId2, newCost);
+					if(updateCost(serverId1, serverId2, newCost)!= 0)
+						std::cout<<"None of the server id is the neighbor or none of the id is of the current server"<<std::endl;
+					else
+						std::cout<<"UPDTAE : SUCCESS"<<std::endl;
 					break;
 
 				case PACKETS:
@@ -316,7 +380,7 @@ int ServerRouter::serverRun()
 			{
 				if(0 != recvProcessUpdatePacket())
 				{
-					std::cout<<"Failed to recieve update packet"<<std::endl;
+					std::cout<<"Failed to receive update packet"<<std::endl;
 				}
 				FD_CLR(serSocketFd, &activeFdSet);
 			}
