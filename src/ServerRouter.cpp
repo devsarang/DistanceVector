@@ -293,7 +293,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		otherId = server1;
 	for(std::vector<std::pair<std::string,unsigned short> >::iterator it = neighborList.begin();it!=neighborList.end();++it)
 	{
-		if(serverTable[otherId] == it->first)
+		if(serverTable[otherId].servIp == it->first)
 			isNeighbor = true;
 	}
 	if(!isNeighbor)
