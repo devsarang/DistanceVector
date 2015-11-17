@@ -114,13 +114,14 @@ int ServerRouter::serverRouterInitialize(std::string fileName, int timeInterval)
 			serverTable.insert(std::make_pair(serverid,temp));
 		}
 
+		serverTable[serverId].cost = 0;		//update the self cost to be zero
+
 		for(int i=0;i<numNeighbors;i++)
 		{
 			topologyFile>>serverid>>neighborid>>cost;
 			serverTable[neighborid].cost =cost;
 			neighborList.push_back(std::make_pair(serverTable[neighborid].servIp,serverTable[neighborid].port));
 		}
-		serverTable[serverId].cost = 0;		//update the self cost to be zero
 	}
 	topologyFile.close();
 	distanceVectorInit();
@@ -239,7 +240,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	numPacket++;
 	std::string fromIp;
 	int fromId = 0;
-	int ip = updatePacket->serverIP;
+	int ip = recvdPacket->serverIP;
 	char * temp;
 	temp = inet_ntoa(recvAddr.sin_addr);
 	fromIp = temp;
@@ -254,13 +255,13 @@ int ServerRouter::recvProcessUpdatePacket()
 	for(int i=0;i<numServers;i++)
 	{
 #ifdef DEBUG
-		std::cout<<"current cost to "<<fromId<<" = "<<minOfRowInDV(fromId-1);
-		std::cout<<"cost from "<<fromId<<" to "<<updatePacket->List[i].serverId-1<<" = "<<updatePacket->List[i].linkCost<<std::endl;
+		std::cout<<"current cost to "<<fromId<<" = "<<minOfRowInDV(fromId-1)<<std::endl;
+		std::cout<<"cost from "<<fromId<<" to "<<recvdPacket->List[i].serverId<<" = "<<recvdPacket->List[i].linkCost<<std::endl;
 #endif
-		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| updatePacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
-			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
+		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
+			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
 		else
-			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = minOfRowInDV(fromId-1)+ updatePacket->List[i].linkCost;
+			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 	}
 	updateRoutingTable();
 	updatePacketRefresh();
@@ -269,12 +270,13 @@ int ServerRouter::recvProcessUpdatePacket()
 	std::cout<<"The received packet"<<std::endl;
 	for(int i=0;i<numServers;i++)
 	{
-		std::cout<<updatePacket->List[i].serverId<<" "<<updatePacket->List[i].linkCost<<std::endl;
+		std::cout<<recvdPacket->List[i].serverId<<" "<<recvdPacket->List[i].linkCost<<std::endl;
 	}
 	std::cout<<"Distance Vector :"<<std::endl;
 	displayDV();
 	displayRoutingTable();
 #endif
+	free(recvdPacket);
 	return 0;
 
 }
