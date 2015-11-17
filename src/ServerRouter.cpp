@@ -253,6 +253,10 @@ int ServerRouter::recvProcessUpdatePacket()
 	}
 	for(int i=0;i<numServers;i++)
 	{
+#ifdef DEBUG
+		std::cout<<"current cost to "<<fromId<<" = "<<minOfRowInDV(fromId-1);
+		std::cout<<"cost from "<<fromId<<" to "<<updatePacket->List[i].serverId-1<<" = "<<updatePacket->List[i].linkCost<<std::endl;
+#endif
 		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| updatePacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
 			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
 		else
@@ -262,6 +266,11 @@ int ServerRouter::recvProcessUpdatePacket()
 	updatePacketRefresh();
 #ifdef DEBUG
 	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
+	std::cout<<"The received packet"<<std::endl;
+	for(int i=0;i<numServers;i++)
+	{
+		std::cout<<updatePacket->List[i].serverId<<" "<<updatePacket->List[i].linkCost<<std::endl;
+	}
 	std::cout<<"Distance Vector :"<<std::endl;
 	displayDV();
 	displayRoutingTable();
