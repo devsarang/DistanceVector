@@ -256,7 +256,7 @@ int ServerRouter::recvProcessUpdatePacket()
 		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| updatePacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
 			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
 		else
-			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + updatePacket->List[i].linkCost;
+			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = minOfRowInDV(fromId-1)+ updatePacket->List[i].linkCost;
 	}
 	updateRoutingTable();
 	updatePacketRefresh();
