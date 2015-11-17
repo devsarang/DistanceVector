@@ -332,7 +332,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 	}
 	if(!isNeighbor)
 		return 1;
-	distanceVector[otherId][otherId] = cost;
+	distanceVector[otherId-1][otherId-1] = cost;
 	updateRoutingTable();
 	updatePacketRefresh();
 	return 0;
