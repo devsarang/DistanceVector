@@ -263,10 +263,6 @@ int ServerRouter::recvProcessUpdatePacket()
 
 	for(int i=0;i<numServers;i++)
 	{
-#ifdef DEBUG
-		std::cout<<"current cost to "<<fromId<<" = "<<minOfRowInDV(fromId-1)<<std::endl;
-		std::cout<<"cost from "<<fromId<<" to "<<recvdPacket->List[i].serverId<<" = "<<recvdPacket->List[i].linkCost<<std::endl;
-#endif
 		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
 			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
 		else
@@ -274,8 +270,8 @@ int ServerRouter::recvProcessUpdatePacket()
 	}
 	updateRoutingTable();
 	updatePacketRefresh();
+	std::cout<<"Update Packet from Id : "<<fromId<<" IP : "<<fromIp<<std::endl;
 #ifdef DEBUG
-	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
 	std::cout<<"The received packet"<<std::endl;
 	for(int i=0;i<numServers;i++)
 	{
@@ -309,6 +305,8 @@ int ServerRouter::updateRoutingTable()
 	for(int i=0;i<numServers;i++)
 	{
 		serverTable[i+1].cost = minOfRowInDV(i);
+		serverTable[i+1].nextId = minIndexOfRowInDV(i)+1;
+		serverTable[i+1].nextIp = serverTable[serverTable[i+1].nextId].servIp;
 	}
 	return 0;
 }
@@ -324,6 +322,20 @@ unsigned short ServerRouter::minOfRowInDV(int row)
 	return minVal;
 }
 
+unsigned short ServerRouter::minIndexOfRowInDV(int row)
+{
+	unsigned short minVal = distanceVector[row][0];
+	unsigned short minIndex = 0;
+	for(int i=0;i<numServers;i++)
+	{
+		if(minVal>distanceVector[row][i])
+		{
+			minVal = distanceVector[row][i];
+			minIndex = i;
+		}
+	}
+	return minIndex;
+}
 int ServerRouter::updateCost(unsigned short server1, unsigned short server2, unsigned short cost)
 {
 	if(serverId != server1 && serverId != server2)
@@ -368,7 +380,8 @@ int ServerRouter::serverRun()
 		{
 			if (FD_ISSET(fileno(stdin), &activeFdSet))
 			{
-				unsigned short newCost = 0, serverId1 = 0, serverId2 = 0;
+				unsigned short serverId1 = 0, serverId2 = 0, newCost = 0;
+				std::string cost;
 				std::cin >> command;
 				switch (commandInterpretor(command))
 				{
@@ -382,7 +395,11 @@ int ServerRouter::serverRun()
 					break;
 
 				case UPDATE:
-					std::cin >> serverId1 >> serverId2 >> newCost;
+					std::cin >> serverId1 >> serverId2 >> cost;
+					if(cost == "inf")
+						newCost = std::numeric_limits<unsigned short>::max();
+					else
+						newCost = atoi(cost.c_str());
 					if(updateCost(serverId1, serverId2, newCost)!= 0)
 						std::cout<<"None of the server id is the neighbor or none of the id is of the current server"<<std::endl;
 					else
@@ -397,9 +414,14 @@ int ServerRouter::serverRun()
 
 				case DISABLE:
 					std::cin >> serverId1;
-
-					break;
-
+					if(neighborList.find(serverId1)!=neighborList.end())
+						std::cout<<"ERROR : Given server id is not a not a neighbor"<<std::endl;
+					else
+					{
+						updateCost(serverId, serverId1, std::numeric_limits<unsigned short>::max());
+						neighborList.erase(serverId1);
+						std::cout<<"SUCCESS : DISABLE"<<std::endl;
+					}
 				case STEP:
 					if(0 != sendRoutingUpdatePacket())
 						std::cout<<"ERROR : Failed to send the update packet"<<std::endl;
