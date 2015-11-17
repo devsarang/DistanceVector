@@ -176,8 +176,7 @@ void ServerRouter::displayRoutingTable()
 
 int ServerRouter::updatePacketInit()
 {
-	size_t structSize = sizeof(ServerRouterPacket) - sizeof(ServerRouterInfo*);
-	updatePacketLen = structSize + sizeof(numServers*sizeof(ServerRouterInfo));
+	updatePacketLen = sizeof(ServerRouterPacket) + numServers*sizeof(ServerRouterInfo);
 	updatePacket = (ServerRouterPacket*)malloc(updatePacketLen);
 	updatePacket->numFields = numServers;
 	updatePacket->serverPort = portNumber;

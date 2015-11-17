@@ -17,7 +17,7 @@ class ServerRouter
 {
 	int numPacket;
 	ServerRouterPacket *updatePacket;
-	size_t updatePacketLen;
+	int updatePacketLen;
 	unsigned short serverId;
 	unsigned short portNumber;
 	std::string serverIp;
