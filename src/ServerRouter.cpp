@@ -244,7 +244,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	}
 	for(int i=0;i<numServers;i++)
 	{
-		distanceVector[updatePacket->List[i].serverId][fromId] = serverTable[fromId].cost + updatePacket->List[i].linkCost;
+		distanceVector[updatePacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + updatePacket->List[i].linkCost;
 	}
 	updateRoutingTable();
 #ifdef DEBUG
