@@ -34,7 +34,14 @@ class ServerRouter
 	    unsigned short cost;
 	}ServerInfo;
 	std::map<unsigned short,ServerInfo> serverTable;
-	std::vector<std::pair<std::string,unsigned short> >neighborList;
+	typedef struct
+		{
+			std::string servIp;
+			unsigned short port;
+			int packetRecvd;
+			int packetSent;
+		}NeighborInfo;
+	std::map<unsigned short,NeighborInfo >neighborList;
 	std::vector<std::vector<unsigned short> > distanceVector;
 	int serSocketFd, maxFd;
 	fd_set activeFdSet, masterFdSet;

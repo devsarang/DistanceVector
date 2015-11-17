@@ -120,7 +120,12 @@ int ServerRouter::serverRouterInitialize(std::string fileName, int timeInterval)
 		{
 			topologyFile>>serverid>>neighborid>>cost;
 			serverTable[neighborid].cost =cost;
-			neighborList.push_back(std::make_pair(serverTable[neighborid].servIp,serverTable[neighborid].port));
+			NeighborInfo temp;
+			temp.port = serverTable[neighborid].port;
+			temp.servIp = serverTable[neighborid].servIp;
+			temp.packetRecvd = 0;
+			temp.packetSent = 0;
+			neighborList.insert(std::make_pair(neighborid,temp));
 		}
 	}
 	topologyFile.close();
@@ -207,21 +212,22 @@ int ServerRouter::updatePacketRefresh()
 
 int ServerRouter::sendRoutingUpdatePacket()
 {
-	for(std::vector<std::pair<std::string,unsigned short> >::iterator it = neighborList.begin();it!=neighborList.end();++it)
+	for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
 	{
 		struct sockaddr_in servAddr;
 
 		//Construct the server sockaddr_ structure
 		memset(&servAddr, 0, sizeof(servAddr));
 		servAddr.sin_family=AF_INET;
-		inet_pton(AF_INET,it->first.c_str(),&servAddr.sin_addr.s_addr);
-		servAddr.sin_port=htons(it->second);
+		inet_pton(AF_INET,it->second.servIp.c_str(),&servAddr.sin_addr.s_addr);
+		servAddr.sin_port=htons(it->second.port);
 
 		if(sendto(serSocketFd, updatePacket, updatePacketLen, 0, (struct sockaddr *)&servAddr, sizeof(servAddr))!=updatePacketLen)
 		{
 			std::cout<<"Mismatch in number of bytes sent";
 			return 1;
 		}
+		it->second.packetSent++;
 	}
 	return 0;
 }
@@ -252,6 +258,9 @@ int ServerRouter::recvProcessUpdatePacket()
 			break;
 		}
 	}
+
+	neighborList[fromId].packetRecvd++;  //increment the no. of packet received from a particular neighbor
+
 	for(int i=0;i<numServers;i++)
 	{
 #ifdef DEBUG
@@ -319,18 +328,12 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 {
 	if(serverId != server1 && serverId != server2)
 		return 1;
-	bool isNeighbor = false;
 	unsigned short otherId = 0;
 	if(serverId == server1)
 		otherId = server2;
 	else
 		otherId = server1;
-	for(std::vector<std::pair<std::string,unsigned short> >::iterator it = neighborList.begin();it!=neighborList.end();++it)
-	{
-		if(serverTable[otherId].servIp == it->first)
-			isNeighbor = true;
-	}
-	if(!isNeighbor)
+	if(neighborList.find(otherId) == neighborList.end())
 		return 1;
 	distanceVector[otherId-1][otherId-1] = cost;
 	updateRoutingTable();
@@ -417,6 +420,22 @@ int ServerRouter::serverRun()
 				{
 					std::cout<<"Failed to receive update packet"<<std::endl;
 				}
+				for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
+				{
+					if(it->second.packetSent - it->second.packetRecvd > 3)
+					{
+						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
+						neighborList.erase(it);
+					}
+					else if(it->second.packetRecvd > it->second.packetSent)
+					{
+						tv.tv_sec = routingUpdateInterval;
+						tv.tv_usec = 0;
+						if(0 != sendRoutingUpdatePacket())
+							std::cout<<"Failed to send the update packet"<<std::endl;
+					}
+				}
+
 				FD_CLR(serSocketFd, &activeFdSet);
 			}
 		}
