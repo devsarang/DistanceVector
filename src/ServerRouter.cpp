@@ -120,6 +120,7 @@ int ServerRouter::serverRouterInitialize(std::string fileName, int timeInterval)
 			serverTable[neighborid].cost =cost;
 			neighborList.push_back(std::make_pair(serverTable[neighborid].servIp,serverTable[neighborid].port));
 		}
+		serverTable[serverId].cost = 0;		//update the self cost to be zero
 	}
 	topologyFile.close();
 	distanceVectorInit();
