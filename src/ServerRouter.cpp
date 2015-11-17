@@ -165,7 +165,7 @@ void ServerRouter::displayRoutingTable()
 	{
 		if(serverTable[i+1].cost == std::numeric_limits<unsigned short>::max())
 		{
-			std::cout<<std::setw(6)<<serverId<<std::setw(17)<<serverIp<<std::setw(7)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<"infinity"<<std::endl;
+			std::cout<<std::setw(6)<<serverId<<std::setw(17)<<serverIp<<std::setw(7)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<"inf"<<std::endl;
 		}
 		else
 		{
@@ -190,6 +190,15 @@ int ServerRouter::updatePacketInit()
 		inet_aton(serverTable[i+1].servIp.c_str(),temp);
 		updatePacket->List[i].serverIp = temp->s_addr;
 		updatePacket->List[i].serverPort = serverTable[i+1].port;
+	}
+	return 0;
+}
+
+int ServerRouter::updatePacketRefresh()
+{
+	for(int i = 0;i<numServers;i++)
+	{
+		updatePacket->List[i].linkCost= serverTable[i+1].cost;
 	}
 	return 0;
 }
@@ -236,10 +245,10 @@ int ServerRouter::recvProcessUpdatePacket()
 	for(int i=0;i<numServers;i++)
 	{
 		if(fromIp == serverTable[i+1].servIp)
-			{
-				fromId = i+1;
-				break;
-			}
+		{
+			fromId = i+1;
+			break;
+		}
 	}
 	for(int i=0;i<numServers;i++)
 	{
@@ -249,6 +258,7 @@ int ServerRouter::recvProcessUpdatePacket()
 			distanceVector[updatePacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + updatePacket->List[i].linkCost;
 	}
 	updateRoutingTable();
+	updatePacketRefresh();
 #ifdef DEBUG
 	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
 	std::cout<<"Distance Vector :"<<std::endl;
@@ -312,6 +322,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		return 1;
 	distanceVector[otherId][otherId] = cost;
 	updateRoutingTable();
+	updatePacketRefresh();
 	return 0;
 }
 int ServerRouter::serverRun()

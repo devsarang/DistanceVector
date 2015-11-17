@@ -50,6 +50,7 @@ public:
 	int recvProcessUpdatePacket();
 	int updateRoutingTable();
 	void displayDV();
+	int updatePacketRefresh();
 	unsigned short minOfRowInDV(int row);
 	int updateCost(unsigned short serverId1, unsigned short serverId2, unsigned short newCost);
 	int serverRun();
