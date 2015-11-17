@@ -15,7 +15,7 @@
 
 class ServerRouter
 {
-	bool isDVChanged;
+	int numPacket;
 	ServerRouterPacket *updatePacket;
 	size_t updatePacketLen;
 	unsigned short serverId;
