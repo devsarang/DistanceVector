@@ -160,16 +160,16 @@ int ServerRouter::distanceVectorInit()
 
 void ServerRouter::displayRoutingTable()
 {
-	std::cout<<std::setw(7)<<"FROM ID"<<std::setw(17)<<"FROM IP"<<std::setw(5)<<"TO ID"<<std::setw(17)<<"TO IP"<<std::setw(7)<<"NEXT ID"<<std::setw(17)<<"NEXT IP"<<std::setw(5)<<"COST"<<std::endl;
+	std::cout<<std::setw(6)<<"FRM ID"<<std::setw(17)<<"FROM IP"<<std::setw(7)<<"TO ID"<<std::setw(17)<<"TO IP"<<std::setw(7)<<"NXT ID"<<std::setw(17)<<"NXT IP"<<std::setw(7)<<"COST"<<std::endl;
 	for(unsigned int i=0;i<numServers;i++)
 	{
 		if(serverTable[i+1].cost == std::numeric_limits<unsigned short>::max())
 		{
-			std::cout<<std::setw(7)<<serverId<<std::setw(17)<<serverIp<<std::setw(5)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(5)<<"infinity"<<std::endl;
+			std::cout<<std::setw(6)<<serverId<<std::setw(17)<<serverIp<<std::setw(7)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<"infinity"<<std::endl;
 		}
 		else
 		{
-			std::cout<<std::setw(7)<<serverId<<std::setw(17)<<serverIp<<std::setw(5)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(5)<<serverTable[i+1].cost<<std::endl;
+			std::cout<<std::setw(6)<<serverId<<std::setw(17)<<serverIp<<std::setw(7)<<i+1<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].nextId<<std::setw(17)<<serverTable[i+1].nextIp<<std::setw(7)<<serverTable[i+1].cost<<std::endl;
 		}
 	}
 }
@@ -251,6 +251,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	updateRoutingTable();
 #ifdef DEBUG
 	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
+	std::cout<<"Distance Vector :"<<std::endl;
 	displayDV();
 	displayRoutingTable();
 #endif
