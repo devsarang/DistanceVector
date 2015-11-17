@@ -232,7 +232,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	socklen_t addrlen = sizeof(recvAddr);
 	ServerRouterPacket *recvdPacket;
 	recvdPacket = (ServerRouterPacket*)malloc(updatePacketLen);
-	if(updatePacketLen != recvfrom(serSocketFd, &recvdPacket, updatePacketLen, 0, (struct sockaddr *)&recvAddr, &addrlen))
+	if(updatePacketLen != recvfrom(serSocketFd, recvdPacket, updatePacketLen, 0, (struct sockaddr *)&recvAddr, &addrlen))
 	{
 		std::cout<<"Wrong length of packet"<<std::endl;
 		return 1;
