@@ -25,13 +25,14 @@
 
 ServerRouter::ServerRouter()
 {
-	isDVChanged = false;
+	numPacket = 0;
 	serverId = 0;
 	portNumber = 0;
 	numServers = 0;
 	numNeighbors = 0;
 	routingUpdateInterval = 0;
 	updatePacket = 0;
+	updatePacketLen = 0;
 	FD_ZERO(&masterFdSet);
 	serSocketFd = 0;
 	maxFd = 0;
@@ -226,7 +227,7 @@ int ServerRouter::recvProcessUpdatePacket()
 		std::cout<<"Wrong length of packet"<<std::endl;
 		return 1;
 	}
-
+	numPacket++;
 	std::string fromIp;
 	int fromId = 0;
 	int ip = updatePacket->serverIP;
@@ -256,6 +257,7 @@ int ServerRouter::recvProcessUpdatePacket()
 		}
 		std::cout<<std::endl;
 	}
+	displayRoutingTable();
 #endif
 	return 0;
 
@@ -314,8 +316,6 @@ int ServerRouter::serverRun()
 	while (true)
 	{
 		activeFdSet = masterFdSet;
-		//tv.tv_sec = routingUpdateInterval;
-		//tv.tv_usec = 0;
 		retval = select(maxFd + 1, &activeFdSet, NULL, NULL, &tv);
 		if (retval == -1)
 		{
@@ -323,13 +323,10 @@ int ServerRouter::serverRun()
 		}
 		if (retval == 0)
 		{
-			//if(isDVChanged)
-			{
-				tv.tv_sec = routingUpdateInterval;
-				tv.tv_usec = 0;
-				if(0 != sendRoutingUpdatePacket())
-					std::cout<<"Failed to send the update packet"<<std::endl;
-			}
+			tv.tv_sec = routingUpdateInterval;
+			tv.tv_usec = 0;
+			if(0 != sendRoutingUpdatePacket())
+				std::cout<<"Failed to send the update packet"<<std::endl;
 		}
 		else
 		{
@@ -357,7 +354,9 @@ int ServerRouter::serverRun()
 					break;
 
 				case PACKETS:
-
+					std::cout<<"Number of packets received since last call : "<<numPacket<<std::endl;
+					std::cout<<" PACKET : SUCCESS"<<std::endl;
+					numPacket = 0;
 					break;
 
 				case DISABLE:
@@ -366,10 +365,13 @@ int ServerRouter::serverRun()
 					break;
 
 				case STEP:
-
+					if(0 != sendRoutingUpdatePacket())
+						std::cout<<"ERROR : Failed to send the update packet"<<std::endl;
+					else
+						std::cout<<"STEP : SUCCESS"<<std::endl;
 					break;
 				default:
-					std::cout << "Wrong command entered" << std::endl;
+					std::cout << "ERROR : Wrong command entered" << std::endl;
 					break;
 				}
 				if (commandInterpretor(command) == CRASH)
