@@ -248,20 +248,27 @@ int ServerRouter::recvProcessUpdatePacket()
 	updateRoutingTable();
 #ifdef DEBUG
 	std::cout<<"Update from id : "<<fromId<<" ip : "<<fromIp<<std::endl;
-	for(int i=0;i<numServers;i++)
-	{
-		for(int j=0;j<numServers;j++)
-		{
-			std::cout<<distanceVector[i][j]<<"  ";
-		}
-		std::cout<<std::endl;
-	}
+	displayDV();
 	displayRoutingTable();
 #endif
 	return 0;
 
 }
 
+void ServerRouter::displayDV()
+{
+	for (int i = 0; i < numServers; i++)
+	{
+		for (int j = 0; j < numServers; j++)
+		{
+			if(distanceVector[i][j] == std::numeric_limits<unsigned short>::max())
+				std::cout<<std::setw(5)<<"inf";
+			else
+				std::cout<<std::setw(5)<< distanceVector[i][j];
+		}
+		std::cout << std::endl;
+	}
+}
 int ServerRouter::updateRoutingTable()
 {
 	for(int i=0;i<numServers;i++)
