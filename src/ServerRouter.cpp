@@ -311,7 +311,7 @@ void ServerRouter::displayDV()
 	{
 		for (int j = 0; j < numServers; j++)
 		{
-			if(j == serverId || i == serverId || neighborList.find(j+1) == neighborList.end())
+			if(j+1 == serverId || i+1 == serverId || neighborList.find(j+1) == neighborList.end())
 			{
 				std::cout<<std::setw(5)<<"N.A";
 			}
