@@ -482,16 +482,19 @@ int ServerRouter::serverRun()
 					std::cout<<"Failed to receive update packet"<<std::endl;
 				}
 				std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();
-				while(it!=neighborList.end())
+				while(it != neighborList.end())
 				{
 					std::map<unsigned short,NeighborInfo>::iterator toErase;
+					bool shouldErase = false;
 					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
 						toErase = it;
+						shouldErase = true;
 					}
 					++it;
-					neighborList.erase(toErase);
+					if(shouldErase)
+						neighborList.erase(toErase);
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);
