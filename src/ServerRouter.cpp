@@ -269,17 +269,23 @@ int ServerRouter::recvProcessUpdatePacket()
 
 	neighborList[fromId].packetRecvd++;  //increment the no. of packet received from a particular neighbor
 
+/**************************************************START OF DISTRIBUTED BELLMAN FORD ALGORITHM****************************************************************/
 	for(int i=0;i<numServers;i++)
 	{
-		if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
-			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
-		else
+		//if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
+		//	distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
+		//else
+		if(recvdPacket->List[i].serverId != serverId && neighborList.find(fromId) != neighborList.end())
 			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 	}
-	updateRoutingTable();
-	updatePacketRefresh();
+	//the distance vector has been updated according to the incoming packet
+	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector
+
+	updatePacketRefresh();		//the Packets to be sent are updated with the change in value if any
 	std::cout<<"Update Packet from Id : "<<fromId<<" IP : "<<fromIp<<std::endl;
-#ifdef DEBUG
+
+#ifdef DEBUG		//set this flag from Constants.h to get the packet and DV output at console
+
 	std::cout<<"The received packet"<<std::endl;
 	for(int i=0;i<numServers;i++)
 	{
@@ -288,6 +294,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	std::cout<<"Distance Vector :"<<std::endl;
 	displayDV();
 	displayRoutingTable();
+	/******************************************END OF DISTRIBUTED BELLMAN FORD ALGORITHM************************************************************8*/
 #endif
 	free(recvdPacket);
 	return 0;
@@ -358,7 +365,6 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 	distanceVector[otherId-1][otherId-1] = cost;
 	updateRoutingTable();
 	updatePacketRefresh();
-	sendRoutingUpdatePacket(neighborList[otherId].servIp, neighborList[otherId].port);
 	return 0;
 }
 int ServerRouter::serverRun()
