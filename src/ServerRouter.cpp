@@ -210,7 +210,8 @@ int ServerRouter::updatePacketRefresh()
 	return 0;
 }
 
-int ServerRouter::sendRoutingUpdatePacket(std::string IP, unsigned short port) {
+int ServerRouter::sendRoutingUpdatePacket(std::string IP, unsigned short port)
+{
 	struct sockaddr_in servAddr;
 
 	//Construct the server sockaddr_ structure
@@ -418,7 +419,7 @@ int ServerRouter::serverRun()
 		{
 			if (FD_ISSET(fileno(stdin), &activeFdSet))
 			{
-				unsigned short serverId1 = 0, serverId2 = 0, newCost = 0;
+				unsigned short server = 0, serverId1 = 0, serverId2 = 0, newCost = 0;
 				std::string cost;
 				std::cin >> command;
 				switch (commandInterpretor(command))
@@ -451,13 +452,13 @@ int ServerRouter::serverRun()
 					break;
 
 				case DISABLE:
-					std::cin >> serverId1;
-					if(neighborList.find(serverId1)==neighborList.end())
+					std::cin >> server;
+					if(neighborList.find(server) == neighborList.end())
 						std::cout<<"ERROR : Given server id is not a not a neighbor"<<std::endl;
 					else
 					{
-						updateCost(serverId, serverId1, std::numeric_limits<unsigned short>::max());
-						neighborList.erase(serverId1);
+						updateCost(serverId, server, std::numeric_limits<unsigned short>::max());
+						neighborList.erase(server);
 						std::cout<<"SUCCESS : DISABLE"<<std::endl;
 					}
 					break;
