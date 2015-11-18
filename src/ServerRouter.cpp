@@ -272,11 +272,15 @@ int ServerRouter::recvProcessUpdatePacket()
 /**************************************************START OF DISTRIBUTED BELLMAN FORD ALGORITHM****************************************************************/
 	for(int i=0;i<numServers;i++)
 	{
-		//if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
-		//	distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
-		//else
-		if(recvdPacket->List[i].serverId != serverId && neighborList.find(fromId) != neighborList.end())
-			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
+
+		if(recvdPacket->List[i].serverId != serverId && neighborList.find(fromId) != neighborList.end())  //do not fill the self distance, distance via itself, and distance via non neighbors
+		{
+			if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())  // handle cases if new cost or shortest cost is infinity
+				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
+			else
+				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
+		}
+
 	}
 	//the distance vector has been updated according to the incoming packet
 	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector
@@ -307,10 +311,15 @@ void ServerRouter::displayDV()
 	{
 		for (int j = 0; j < numServers; j++)
 		{
-			if(distanceVector[i][j] == std::numeric_limits<unsigned short>::max())
-				std::cout<<std::setw(5)<<"inf";
+			if(j == serverId || i == serverId || neighborList.find(j+1) != neighborList.end())
+				std::cout<<std::setw(5)<<"N.A";
 			else
-				std::cout<<std::setw(5)<< distanceVector[i][j];
+			{
+				if(distanceVector[i][j] == std::numeric_limits<unsigned short>::max())
+					std::cout<<std::setw(5)<<"inf";
+				else
+					std::cout<<std::setw(5)<< distanceVector[i][j];
+			}
 		}
 		std::cout << std::endl;
 	}
