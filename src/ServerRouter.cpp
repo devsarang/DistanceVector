@@ -484,13 +484,14 @@ int ServerRouter::serverRun()
 				std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();
 				while(it!=neighborList.end())
 				{
+					std::map<unsigned short,NeighborInfo>::iterator toErase;
 					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
-						std::map<unsigned short,NeighborInfo>::iterator toErase = it;
-						++it;
-						neighborList.erase(toErase);
+						toErase = it;
 					}
+					++it;
+					neighborList.erase(toErase);
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);
