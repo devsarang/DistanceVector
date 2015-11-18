@@ -273,9 +273,11 @@ int ServerRouter::recvProcessUpdatePacket()
 	for(int i=0;i<numServers;i++)
 	{
 
-		if(recvdPacket->List[i].serverId != serverId && neighborList.find(fromId) != neighborList.end() && recvdPacket->List[i].serverId != fromId)  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
+		if(recvdPacket->List[i].serverId != serverId && distanceVector[fromId-1][fromId-1] != std::numeric_limits<unsigned short>::max()
+				&& recvdPacket->List[i].serverId != fromId)  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
 		{
-			if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()|| recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())  // handle cases if new cost or shortest cost is infinity
+			if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()||
+					recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())  // handle cases if new cost or shortest cost is infinity
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = std::numeric_limits<unsigned short>::max();
 			else
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
@@ -283,7 +285,7 @@ int ServerRouter::recvProcessUpdatePacket()
 
 	}
 	//the distance vector has been updated according to the incoming packet
-	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector
+	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector's row and the next hop
 
 	updatePacketRefresh();		//the Packets to be sent are updated with the change in value if any
 	std::cout<<"Update Packet from Id : "<<fromId<<" IP : "<<fromIp<<std::endl;
