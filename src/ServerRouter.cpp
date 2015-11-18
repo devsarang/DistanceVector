@@ -450,13 +450,13 @@ int ServerRouter::serverRun()
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
 						neighborList.erase(it);
 					}
-					else if(it->second.packetRecvd > it->second.packetSent)
-					{
-						tv.tv_sec = routingUpdateInterval;
-						tv.tv_usec = 0;
-						if(0 != sendRoutingUpdatePacket())
-							std::cout<<"Failed to send the update packet"<<std::endl;
-					}
+//					else if(it->second.packetRecvd > it->second.packetSent)
+//					{
+//						tv.tv_sec = routingUpdateInterval;
+//						tv.tv_usec = 0;
+//						if(0 != sendRoutingUpdatePacket())
+//							std::cout<<"Failed to send the update packet"<<std::endl;
+//					}
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);
