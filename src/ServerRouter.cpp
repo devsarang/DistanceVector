@@ -210,24 +210,32 @@ int ServerRouter::updatePacketRefresh()
 	return 0;
 }
 
-int ServerRouter::sendRoutingUpdatePacket()
+int ServerRouter::sendRoutingUpdatePacket(std::string IP, unsigned short port) {
+	struct sockaddr_in servAddr;
+
+	//Construct the server sockaddr_ structure
+	memset(&servAddr, 0, sizeof(servAddr));
+	servAddr.sin_family = AF_INET;
+	inet_pton(AF_INET, IP.c_str(), &servAddr.sin_addr.s_addr);
+	servAddr.sin_port = htons(port);
+
+	if (sendto(serSocketFd, updatePacket, updatePacketLen, 0,
+			(struct sockaddr *) &servAddr, sizeof(servAddr))
+			!= updatePacketLen) {
+		std::cout << "Mismatch in number of bytes sent";
+		return 1;
+	}
+	return 0;
+}
+
+int ServerRouter::sendRoutingUpdatePacketToAll()
 {
 	for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
 	{
-		struct sockaddr_in servAddr;
-
-		//Construct the server sockaddr_ structure
-		memset(&servAddr, 0, sizeof(servAddr));
-		servAddr.sin_family=AF_INET;
-		inet_pton(AF_INET,it->second.servIp.c_str(),&servAddr.sin_addr.s_addr);
-		servAddr.sin_port=htons(it->second.port);
-
-		if(sendto(serSocketFd, updatePacket, updatePacketLen, 0, (struct sockaddr *)&servAddr, sizeof(servAddr))!=updatePacketLen)
-		{
-			std::cout<<"Mismatch in number of bytes sent";
+		if(sendRoutingUpdatePacket(it->second.servIp,it->second.port) != 0)
 			return 1;
-		}
-		it->second.packetSent++;
+		else
+			it->second.packetSent++;
 	}
 	return 0;
 }
@@ -350,6 +358,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 	distanceVector[otherId-1][otherId-1] = cost;
 	updateRoutingTable();
 	updatePacketRefresh();
+	sendRoutingUpdatePacket(neighborList[otherId].servIp, neighborList[otherId].port);
 	return 0;
 }
 int ServerRouter::serverRun()
@@ -373,7 +382,7 @@ int ServerRouter::serverRun()
 		{
 			tv.tv_sec = routingUpdateInterval;
 			tv.tv_usec = 0;
-			if(0 != sendRoutingUpdatePacket())
+			if(0 != sendRoutingUpdatePacketToAll())
 				std::cout<<"Failed to send the update packet"<<std::endl;
 		}
 		else
@@ -424,7 +433,7 @@ int ServerRouter::serverRun()
 					}
 					break;
 				case STEP:
-					if(0 != sendRoutingUpdatePacket())
+					if(0 != sendRoutingUpdatePacketToAll())
 						std::cout<<"ERROR : Failed to send the update packet"<<std::endl;
 					else
 						std::cout<<"STEP : SUCCESS"<<std::endl;
@@ -450,13 +459,6 @@ int ServerRouter::serverRun()
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
 						neighborList.erase(it);
 					}
-//					else if(it->second.packetRecvd > it->second.packetSent)
-//					{
-//						tv.tv_sec = routingUpdateInterval;
-//						tv.tv_usec = 0;
-//						if(0 != sendRoutingUpdatePacket())
-//							std::cout<<"Failed to send the update packet"<<std::endl;
-//					}
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);

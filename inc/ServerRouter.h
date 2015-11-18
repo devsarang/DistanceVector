@@ -53,7 +53,8 @@ public:
 	int updatePacketInit();
 	int distanceVectorInit();
 	void displayRoutingTable();
-	int sendRoutingUpdatePacket();
+	int sendRoutingUpdatePacketToAll();
+	int sendRoutingUpdatePacket(std::string, unsigned short);
 	int recvProcessUpdatePacket();
 	int updateRoutingTable();
 	void displayDV();
