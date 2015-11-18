@@ -403,7 +403,7 @@ int ServerRouter::serverRun()
 					if(updateCost(serverId1, serverId2, newCost)!= 0)
 						std::cout<<"None of the server id is the neighbor or none of the id is of the current server"<<std::endl;
 					else
-						std::cout<<"UPDTAE : SUCCESS"<<std::endl;
+						std::cout<<"UPDATE : SUCCESS"<<std::endl;
 					break;
 
 				case PACKETS:
@@ -414,7 +414,7 @@ int ServerRouter::serverRun()
 
 				case DISABLE:
 					std::cin >> serverId1;
-					if(neighborList.find(serverId1)!=neighborList.end())
+					if(neighborList.find(serverId1)==neighborList.end())
 						std::cout<<"ERROR : Given server id is not a not a neighbor"<<std::endl;
 					else
 					{
@@ -422,6 +422,7 @@ int ServerRouter::serverRun()
 						neighborList.erase(serverId1);
 						std::cout<<"SUCCESS : DISABLE"<<std::endl;
 					}
+					break;
 				case STEP:
 					if(0 != sendRoutingUpdatePacket())
 						std::cout<<"ERROR : Failed to send the update packet"<<std::endl;
