@@ -481,12 +481,15 @@ int ServerRouter::serverRun()
 				{
 					std::cout<<"Failed to receive update packet"<<std::endl;
 				}
-				for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
+				std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();
+				while(it!=neighborList.end())
 				{
 					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
-						neighborList.erase(it);
+						std::map<unsigned short,NeighborInfo>::iterator toErase = it;
+						++it;
+						neighborList.erase(toErase);
 					}
 				}
 
