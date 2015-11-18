@@ -375,7 +375,17 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		otherId = server1;
 	if(neighborList.find(otherId) == neighborList.end())
 		return 1;
-	distanceVector[otherId-1][otherId-1] = cost;
+	if(cost == std::numeric_limits<unsigned short>::max())
+	{
+		for(int i=0;i<numServers;i++)		//remove all costs via this server ID
+		{
+			distanceVector[i][otherId-1] = cost;
+		}
+	}
+	else
+	{
+		distanceVector[otherId-1][otherId-1] = cost;
+	}
 	updateRoutingTable();
 	updatePacketRefresh();
 	return 0;
