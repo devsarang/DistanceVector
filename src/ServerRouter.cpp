@@ -397,7 +397,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		distanceVector[otherId-1][otherId-1] = cost;
 	}
 	updateRoutingTable();
-	serverTable[otherId] = cost;
+	serverTable[otherId].cost = cost;
 	updatePacketRefresh();
 	sendRoutingUpdatePacket(neighborList[otherId].servIp, neighborList[otherId].port);
 	return 0;
