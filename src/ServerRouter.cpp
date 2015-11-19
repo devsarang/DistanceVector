@@ -281,7 +281,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	{
 
 		if(recvdPacket->List[i].serverId != serverId && distanceVector[fromId-1][fromId-1] != std::numeric_limits<unsigned short>::max()
-				&& recvdPacket->List[i].serverId != fromId)  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
+				&& recvdPacket->List[i].serverId != fromId && std::find(crashList.begin(), crashList.end(), recvdPacket->List[i].serverId) != crashList.end())  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
 		{
 			if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()||
 					recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())  // handle cases if new cost or shortest cost is infinity
@@ -341,6 +341,16 @@ int ServerRouter::updateRoutingTable()
 		serverTable[i+1].cost = minOfRowInDV(i);
 		serverTable[i+1].nextId = minIndexOfRowInDV(i)+1;
 		serverTable[i+1].nextIp = serverTable[serverTable[i+1].nextId].servIp;
+		if(serverTable[i+1].cost > MAX_COST)	//count to infinity problem, we will assume 100 is the max cost or infinite cost
+		{
+			crashList.push_back(i+1);
+			serverTable[i+1].cost = std::numeric_limits<unsigned short>::max();
+			for(int j=0;i<numServers;i++)		//remove all costs via this server ID and all cost to this server
+			{
+				distanceVector[j][i] = std::numeric_limits<unsigned short>::max();
+				distanceVector[i][j] = std::numeric_limits<unsigned short>::max();
+			}
+		}
 	}
 	return 0;
 }
@@ -387,8 +397,8 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		{
 			distanceVector[i][otherId-1] = cost;
 			distanceVector[otherId-1][i] = cost;
-			serverTable[otherId].cost = cost;
 		}
+		serverTable[otherId].cost = cost;
 	}
 	else
 	{
@@ -518,13 +528,3 @@ int ServerRouter::serverRun()
 	return 0;
 }
 
-void ServerRouter::handleNeighborCrash(int serverid)
-{
-	for(int i=0;i<numServers;i++)		//remove all costs to this server ID
-	{
-		distanceVector[serverid-1][i] = std::numeric_limits<unsigned short>::max();
-	}
-	serverTable[serverid].nextIp = "N.A";
-	serverTable[serverid].nextId = 0;
-	serverTable[serverid].cost = std::numeric_limits<unsigned short>::max();
-}

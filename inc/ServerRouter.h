@@ -44,6 +44,7 @@ class ServerRouter
 	std::map<unsigned short,NeighborInfo >neighborList;
 	std::vector<std::vector<unsigned short> > distanceVector;
 	int serSocketFd, maxFd;
+	std::vector<int>crashList;
 	fd_set activeFdSet, masterFdSet;
 public:
 	ServerRouter();
@@ -63,7 +64,6 @@ public:
 	unsigned short minIndexOfRowInDV(int row);
 	int updateCost(unsigned short serverId1, unsigned short serverId2, unsigned short newCost);
 	int serverRun();
-	void handleNeighborCrash(int serverid);
 };
 
 
