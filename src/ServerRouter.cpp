@@ -291,7 +291,7 @@ int ServerRouter::recvProcessUpdatePacket()
 		}
 		if(recvdPacket->List[i].serverId == serverId && distanceVector[fromId -1][fromId-1] != recvdPacket->List[i].linkCost) //there is an update in cost, updating its distance vector
 		{
-			distanceVector[fromId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
+			distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
 		}
 	}
 	//the distance vector has been updated according to the incoming packet
