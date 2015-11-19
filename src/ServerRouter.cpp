@@ -271,6 +271,8 @@ int ServerRouter::recvProcessUpdatePacket()
 			break;
 		}
 	}
+	if(neighborList.find(fromId) == neighborList.end())
+		return 0;										//not processing the packet from anyone which is not a neighbor
 
 	neighborList[fromId].packetRecvd++;  //increment the no. of packet received from a particular neighbor
 
