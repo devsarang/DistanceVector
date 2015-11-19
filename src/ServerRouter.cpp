@@ -281,7 +281,7 @@ int ServerRouter::recvProcessUpdatePacket()
 	{
 
 		if(recvdPacket->List[i].serverId != serverId && distanceVector[fromId-1][fromId-1] != std::numeric_limits<unsigned short>::max()
-				&& recvdPacket->List[i].serverId != fromId && std::find(crashList.begin(), crashList.end(), recvdPacket->List[i].serverId) != crashList.end())  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
+				&& recvdPacket->List[i].serverId != fromId && std::find(crashList.begin(), crashList.end(), recvdPacket->List[i].serverId) == crashList.end())  //do not fill the self distance, distance via itself, and distance via non neighbors. Also don't update cost for reverse route
 		{
 			if(serverTable[fromId].cost == std::numeric_limits<unsigned short>::max()||
 					recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())  // handle cases if new cost or shortest cost is infinity
