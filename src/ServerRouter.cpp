@@ -223,7 +223,7 @@ int ServerRouter::sendRoutingUpdatePacket(std::string IP, unsigned short port)
 	if (sendto(serSocketFd, updatePacket, updatePacketLen, 0,
 			(struct sockaddr *) &servAddr, sizeof(servAddr))
 			!= updatePacketLen) {
-		std::cout << "Mismatch in number of bytes sent";
+		std::cout << "Mismatch in number of bytes sent"<<std::endl;
 		return 1;
 	}
 	return 0;
@@ -233,6 +233,9 @@ int ServerRouter::sendRoutingUpdatePacketToAll()
 {
 	for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
 	{
+#ifdef DEBUG
+		std::cout<<it->second.servIp<<" "<<it->second.port<<std::endl;
+#endif
 		if(sendRoutingUpdatePacket(it->second.servIp,it->second.port) != 0)
 			return 1;
 		else
