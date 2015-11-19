@@ -289,7 +289,10 @@ int ServerRouter::recvProcessUpdatePacket()
 			else
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 		}
-
+		if(recvdPacket->List[i].serverId == serverId && distanceVector[fromId -1][fromId-1] != recvdPacket->List[i].linkCost) //there is an update in cost, updating its distance vector
+		{
+			distanceVector[fromId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
+		}
 	}
 	//the distance vector has been updated according to the incoming packet
 	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector's row and the next hop
