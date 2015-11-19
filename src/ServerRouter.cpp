@@ -289,10 +289,6 @@ int ServerRouter::recvProcessUpdatePacket()
 			else
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 		}
-		if(recvdPacket->List[i].serverId == serverId && distanceVector[fromId -1][fromId-1] != recvdPacket->List[i].linkCost) //there is an update in cost, updating its distance vector
-		{
-			distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
-		}
 	}
 	//the distance vector has been updated according to the incoming packet
 	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector's row and the next hop
@@ -397,9 +393,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		distanceVector[otherId-1][otherId-1] = cost;
 	}
 	updateRoutingTable();
-	serverTable[otherId].cost = cost;
 	updatePacketRefresh();
-	sendRoutingUpdatePacket(neighborList[otherId].servIp, neighborList[otherId].port);
 	return 0;
 }
 int ServerRouter::serverRun()
@@ -499,11 +493,24 @@ int ServerRouter::serverRun()
 				{
 					std::map<unsigned short,NeighborInfo>::iterator toErase;
 					bool shouldErase = false;
+					bool isCrashed = false;
 					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
 						toErase = it;
 						shouldErase = true;
+
+						//checking if the server has crashed or not
+						struct sockaddr_in servAddr;
+						memset(&servAddr, 0, sizeof(servAddr));
+						servAddr.sin_family = AF_INET;
+						inet_pton(AF_INET, it->second.servIp.c_str(), &servAddr.sin_addr.s_addr);
+						servAddr.sin_port = htons(it->second.port);
+						if (connect(serSocketFd,(struct sockaddr *) &servAddr,sizeof(servAddr)) < 0)
+						{
+							std::cout<<"Server ID : "<<it->first<<" IP : "<<it->second.servIp<<" has crashed"<<std::endl;
+							isCrashed = true;
+						}
 					}
 					++it;
 					if(shouldErase)
@@ -513,6 +520,10 @@ int ServerRouter::serverRun()
 						std::cout<<"Erasing : "<< toErase->first<<" "<<toErase->second.servIp<<std::endl;
 #endif
 					}
+					if(isCrashed)
+					{
+						handleNeighborCrash(it->first);
+					}
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);
@@ -520,4 +531,15 @@ int ServerRouter::serverRun()
 		}
 	}
 	return 0;
+}
+
+void ServerRouter::handleNeighborCrash(int serverid)
+{
+	for(int i=0;i<numServers;i++)		//remove all costs to this server ID
+	{
+		distanceVector[serverid-1][i] = std::numeric_limits<unsigned short>::max();
+	}
+	serverTable[serverid].nextIp = "N.A";
+	serverTable[serverid].nextId = 0;
+	serverTable[serverid].cost = std::numeric_limits<unsigned short>::max();
 }
