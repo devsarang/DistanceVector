@@ -383,9 +383,10 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		return 1;
 	if(cost == std::numeric_limits<unsigned short>::max())
 	{
-		for(int i=0;i<numServers;i++)		//remove all costs via this server ID
+		for(int i=0;i<numServers;i++)		//remove all costs via this server ID and all cost to this server
 		{
 			distanceVector[i][otherId-1] = cost;
+			distanceVector[otherId-1][i] = cost;
 		}
 	}
 	else
@@ -493,24 +494,11 @@ int ServerRouter::serverRun()
 				{
 					std::map<unsigned short,NeighborInfo>::iterator toErase;
 					bool shouldErase = false;
-					bool isCrashed = false;
 					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
 						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
 						toErase = it;
 						shouldErase = true;
-
-						//checking if the server has crashed or not
-						struct sockaddr_in servAddr;
-						memset(&servAddr, 0, sizeof(servAddr));
-						servAddr.sin_family = AF_INET;
-						inet_pton(AF_INET, it->second.servIp.c_str(), &servAddr.sin_addr.s_addr);
-						servAddr.sin_port = htons(it->second.port);
-						if (connect(serSocketFd,(struct sockaddr *) &servAddr,sizeof(servAddr)) < 0)
-						{
-							std::cout<<"Server ID : "<<it->first<<" IP : "<<it->second.servIp<<" has crashed"<<std::endl;
-							isCrashed = true;
-						}
 					}
 					++it;
 					if(shouldErase)
@@ -519,10 +507,6 @@ int ServerRouter::serverRun()
 #ifdef DEBUG
 						std::cout<<"Erasing : "<< toErase->first<<" "<<toErase->second.servIp<<std::endl;
 #endif
-					}
-					if(isCrashed)
-					{
-						handleNeighborCrash(it->first);
 					}
 				}
 
