@@ -387,6 +387,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 		{
 			distanceVector[i][otherId-1] = cost;
 			distanceVector[otherId-1][i] = cost;
+			serverTable[otherId].cost = cost;
 		}
 	}
 	else
