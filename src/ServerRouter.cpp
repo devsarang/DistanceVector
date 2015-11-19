@@ -341,7 +341,7 @@ int ServerRouter::updateRoutingTable()
 		serverTable[i+1].cost = minOfRowInDV(i);
 		serverTable[i+1].nextId = minIndexOfRowInDV(i)+1;
 		serverTable[i+1].nextIp = serverTable[serverTable[i+1].nextId].servIp;
-		if(serverTable[i+1].cost > MAX_COST)	//count to infinity problem, we will assume 100 is the max cost or infinite cost
+		if(serverTable[i+1].cost > MAX_COST && serverTable[i+1].cost != std::numeric_limits<unsigned short>::max())	//count to infinity problem, we will assume 100 is the max cost or infinite cost
 		{
 			crashList.push_back(i+1);
 			serverTable[i+1].cost = std::numeric_limits<unsigned short>::max();
