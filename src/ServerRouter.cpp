@@ -395,6 +395,7 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 	}
 	updateRoutingTable();
 	updatePacketRefresh();
+	sendRoutingUpdatePacket(neighborList[otherId].servIp, neighborList[otherId].port);
 	return 0;
 }
 int ServerRouter::serverRun()
@@ -433,6 +434,7 @@ int ServerRouter::serverRun()
 
 				case DISPLAY:
 					displayRoutingTable();
+					std::cout<<"DISPLAY : SUCCESS"<<std::endl;
 					break;
 
 				case CRASH:
