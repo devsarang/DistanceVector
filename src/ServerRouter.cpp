@@ -234,6 +234,7 @@ int ServerRouter::sendRoutingUpdatePacketToAll()
 	for(std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();it!=neighborList.end();++it)
 	{
 #ifdef DEBUG
+		std::cout<<"Sending update packet to:"<<std::endl;
 		std::cout<<it->second.servIp<<" "<<it->second.port<<std::endl;
 #endif
 		if(sendRoutingUpdatePacket(it->second.servIp,it->second.port) != 0)
@@ -498,7 +499,12 @@ int ServerRouter::serverRun()
 					}
 					++it;
 					if(shouldErase)
+					{
 						neighborList.erase(toErase);
+#ifdef DEBUG
+						std::cout<<"Erasing : "<< toErase->first<<" "<<toErase->second.servIp<<std::endl;
+#endif
+					}
 				}
 
 				FD_CLR(serSocketFd, &activeFdSet);
