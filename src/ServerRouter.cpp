@@ -291,7 +291,7 @@ int ServerRouter::recvProcessUpdatePacket()
 				else
 					distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 			}
-			if(recvdPacket->List[i].serverId != serverId)
+			if(recvdPacket->List[i].serverId == serverId )
 			{
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = recvdPacket->List[i].linkCost;
 			}
