@@ -488,14 +488,23 @@ int ServerRouter::serverRun()
 					{
 						updateCost(serverId, server, std::numeric_limits<unsigned short>::max());
 						neighborList.erase(server);
-						std::cout<<"SUCCESS : DISABLE"<<std::endl;
+						std::cout << "SUCCESS : DISABLE" << std::endl;
 					}
 					break;
 				case STEP:
-					if(0 != sendRoutingUpdatePacketToAll())
-						std::cout<<"ERROR : Failed to send the update packet"<<std::endl;
+					if (0 != sendRoutingUpdatePacketToAll())
+						std::cout << "ERROR : Failed to send the update packet"
+								<< std::endl;
 					else
-						std::cout<<"STEP : SUCCESS"<<std::endl;
+					{
+						std::cout << "STEP : SUCCESS" << std::endl;
+						std::map<unsigned short, NeighborInfo>::iterator it =neighborList.begin();
+						while (it != neighborList.end())
+						{
+							it->second.packetRecvd++;
+							++it;
+						}
+					}
 					break;
 				default:
 					std::cout << "ERROR : Wrong command entered" << std::endl;
@@ -506,28 +515,27 @@ int ServerRouter::serverRun()
 				FD_CLR(fileno(stdin), &activeFdSet);
 			}
 			if (FD_ISSET(serSocketFd, &activeFdSet)) //we have got a routing update
-			{
-				if(0 != recvProcessUpdatePacket())
-				{
-					std::cout<<"Failed to receive update packet"<<std::endl;
-				}
-				std::map<unsigned short,NeighborInfo>::iterator it = neighborList.begin();
-				while(it != neighborList.end())
-				{
-					std::map<unsigned short,NeighborInfo>::iterator toErase;
-					bool shouldErase = false;
-					if(it->second.packetSent - it->second.packetRecvd > 3)
 					{
-						updateCost(serverId, it->first, std::numeric_limits<unsigned short>::max());
+				if (0 != recvProcessUpdatePacket()) {
+					std::cout << "Failed to receive update packet" << std::endl;
+				}
+				std::map<unsigned short, NeighborInfo>::iterator it =
+						neighborList.begin();
+				while (it != neighborList.end()) {
+					std::map<unsigned short, NeighborInfo>::iterator toErase;
+					bool shouldErase = false;
+					if (it->second.packetSent - it->second.packetRecvd > 3) {
+						updateCost(serverId, it->first,
+								std::numeric_limits<unsigned short>::max());
 						toErase = it;
 						shouldErase = true;
 					}
 					++it;
-					if(shouldErase)
-					{
+					if (shouldErase) {
 						neighborList.erase(toErase);
 #ifdef DEBUG
-						std::cout<<"Erasing : "<< toErase->first<<" "<<toErase->second.servIp<<std::endl;
+						std::cout << "Erasing : " << toErase->first << " "
+								<< toErase->second.servIp << std::endl;
 #endif
 					}
 				}
