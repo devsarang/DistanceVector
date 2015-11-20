@@ -291,10 +291,11 @@ int ServerRouter::recvProcessUpdatePacket()
 				else
 					distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 			}
-			if(recvdPacket->List[i].serverId == serverId )
-			{
-				distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
-			}
+		}
+		if(recvdPacket->List[i].serverId == serverId && && recvdPacket->List[i].serverId != fromId
+				&& std::find(crashList.begin(), crashList.end(), recvdPacket->List[i].serverId) == crashList.end())
+		{
+			distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
 		}
 	}
 
