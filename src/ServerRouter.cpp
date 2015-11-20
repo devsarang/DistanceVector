@@ -205,7 +205,7 @@ int ServerRouter::updatePacketRefresh()
 {
 	for(int i = 0;i<numServers;i++)
 	{
-		updatePacket->List[i].linkCost= serverTable[i+1].cost;
+			updatePacket->List[i].linkCost= serverTable[i+1].cost;
 	}
 	return 0;
 }
@@ -237,6 +237,7 @@ int ServerRouter::sendRoutingUpdatePacketToAll()
 		std::cout<<"Sending update packet to:"<<std::endl;
 		std::cout<<it->second.servIp<<" "<<it->second.port<<std::endl;
 #endif
+		updatePacket->List[it->first-1].linkCost= distanceVector[it->first-1][it->first-1];
 		if(sendRoutingUpdatePacket(it->second.servIp,it->second.port) != 0)
 			return 1;
 		else
@@ -289,7 +290,12 @@ int ServerRouter::recvProcessUpdatePacket()
 			else
 				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = serverTable[fromId].cost + recvdPacket->List[i].linkCost;
 		}
+		if(recvdPacket->List[i].serverId != serverId)
+		{
+			distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = recvdPacket->List[i].linkCost;
+		}
 	}
+
 	//the distance vector has been updated according to the incoming packet
 	updateRoutingTable();		//it updates the routing table by the minimum value in the Distance Vector's row and the next hop
 
@@ -449,6 +455,7 @@ int ServerRouter::serverRun()
 
 				case CRASH:
 					close(serSocketFd);
+					std::cout<<"CRASH : SUCCESS"<<std::endl;
 					break;
 
 				case UPDATE:
