@@ -293,7 +293,7 @@ int ServerRouter::recvProcessUpdatePacket()
 			}
 			if(recvdPacket->List[i].serverId == serverId )
 			{
-				distanceVector[recvdPacket->List[i].serverId-1][fromId-1] = recvdPacket->List[i].linkCost;
+				distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
 			}
 		}
 	}
