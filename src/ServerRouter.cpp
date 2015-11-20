@@ -414,6 +414,8 @@ int ServerRouter::updateCost(unsigned short server1, unsigned short server2, uns
 	}
 	updateRoutingTable();
 	updatePacketRefresh();
+	updatePacket->List[otherId-1].linkCost= distanceVector[otherId-1][otherId-1];
+	sendRoutingUpdatePacket(neighborList[otherId].servIp,neighborList[otherId].port);
 	return 0;
 }
 int ServerRouter::serverRun()
