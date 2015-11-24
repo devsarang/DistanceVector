@@ -296,6 +296,13 @@ int ServerRouter::recvProcessUpdatePacket()
 				&& std::find(crashList.begin(), crashList.end(), recvdPacket->List[i].serverId) == crashList.end())
 		{
 			distanceVector[fromId-1][fromId-1] = recvdPacket->List[i].linkCost;
+			if(recvdPacket->List[i].linkCost == std::numeric_limits<unsigned short>::max())
+			{
+				for(int i=0;i<numServers;i++)		//remove all costs via this server ID and all cost to this server
+				{
+					distanceVector[i][fromId-1] = std::numeric_limits<unsigned short>::max();
+				}
+			}
 		}
 	}
 
