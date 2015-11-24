@@ -25,6 +25,7 @@ class ServerRouter
 	int routingUpdateInterval;
 	unsigned short numNeighbors;
 	unsigned short numServers;
+	/**********************************routing  table*****************************/
 	typedef struct
 	{
 		std::string servIp;
@@ -33,6 +34,7 @@ class ServerRouter
 		std::string nextIp;
 	    unsigned short cost;
 	}ServerInfo;
+	/**********************************routing  table end*****************************/
 	std::map<unsigned short,ServerInfo> serverTable;
 	typedef struct
 		{
@@ -42,7 +44,7 @@ class ServerRouter
 			int packetSent;
 		}NeighborInfo;
 	std::map<unsigned short,NeighborInfo >neighborList;
-	std::vector<std::vector<unsigned short> > distanceVector;
+	std::vector<std::vector<unsigned short> > distanceVector;			//distance vector
 	int serSocketFd, maxFd;
 	std::vector<int>crashList;
 	fd_set activeFdSet, masterFdSet;
