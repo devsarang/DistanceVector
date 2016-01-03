@@ -2,7 +2,7 @@
 #define CONSTANTS_H_
 #include <string>
 
-//#define DEBUG
+#define DEBUG
 
 enum command_code {
 	UNKNOWN = -1, UPDATE, PACKETS, DISPLAY, DISABLE, CRASH, STEP
